@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ujian Interaktif Informatika - Scratch</title>
+    <style>
+        :root {
+            --primary: #4a6fa5;
+            --secondary: #ffab40;
+            --bg: #f4f7f6;
+            --text: #333;
+            --card: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--card);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            text-align: center;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .header h2, .header h3, .header h4 {
+            margin: 5px 0;
+            color: var(--primary);
+        }
+
+        .timer-container {
+            position: sticky;
+            top: 10px;
+            background: #eef2f7;
+            padding: 10px 15px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            margin-bottom: 20px;
+            z-index: 100;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .timer {
+            color: #d9534f;
+            font-size: 1.2rem;
+        }
+
+        .student-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        .question-card {
+            background: #fafafa;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .question-title {
+            font-weight: bold;
+            margin-bottom: 12px;
+        }
+
+        .options label {
+            display: block;
+            background: #fff;
+            border: 1px solid #ccc;
+            padding: 10px 15px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .options label:hover {
+            background: #e3edfc;
+            border-color: var(--primary);
+        }
+
+        .options input[type="radio"] {
+            margin-right: 10px;
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            background-color: #3b5984;
+        }
+
+        .btn-wa {
+            background-color: #25d366;
+            margin-top: 10px;
+        }
+
+        .btn-wa:hover {
+            background-color: #1eb956;
+        }
+
+        #result-screen {
+            display: none;
+            text-align: center;
+        }
+
+        .score-box {
+            font-size: 3rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2>SOAL INFORMATIKA FASE D</h2>
+        <h3>MATERI: APLIKASI SCRATCH</h3>
+        <h4>SMP NEGERI 2 NGADIREJO</h4>
+        <p><small>Pengampu: Budi Winarno, S.Kom.</small></p>
+    </div>
+
+    <div id="quiz-screen">
+        <div class="student-info">
+            <div class="input-group">
+                <label for="nama">Nama Lengkap:</label>
+                <input type="text" id="nama" placeholder="Masukkan nama Anda">
+            </div>
+            <div class="input-group">
+                <label for="kelas">Kelas / No. Absen:</label>
+                <input type="text" id="kelas" placeholder="Contoh: 8A / 12">
+            </div>
+        </div>
+
+        <div class="timer-container">
+            <span>Sisa Waktu Ujian:</span>
+            <span id="timer" class="timer">60:00</span>
+        </div>
+
+        <div id="questions-container"></div>
+
+        <button class="btn" onclick="submitQuiz()">Selesai & Kumpulkan Jawaban</button>
+    </div>
+
+    <div id="result-screen">
+        <h2>Hasil Ujian Interaktif</h2>
+        <p id="res-nama"></p>
+        <p id="res-kelas"></p>
+        <div class="score-box" id="res-score">0</div>
+        <p id="res-detail"></p>
+
+        <button class="btn" onclick="downloadResult()">Unduh Hasil Nilai (TXT)</button>
+        <button class="btn btn-wa" onclick="sendWA()">Kirim Nilai ke Guru via WhatsApp</button>
+    </div>
+</div>
+
+<script>
+const rawQuestions = [
+    {q: "Apa fungsi utama dari aplikasi Scratch?", options: ["Membuat dokumen teks", "Membuat program visual seperti animasi dan game", "Mengedit foto", "Mengelola basis data"], answer: 1},
+    {q: "Karakter atau objek utama yang digerakkan dalam Scratch disebut...", options: ["Stage", "Script", "Sprite", "Block"], answer: 2},
+    {q: "Panggung atau area tempat Sprite beraksi dinamakan...", options: ["Stage", "Backdrop", "Costume", "Canvas"], answer: 0},
+    {q: "Blok perintah yang berwarna kuning (Events) biasanya digunakan untuk...", options: ["Mengatur tampilan sprite", "Memulai jalannya suatu skrip", "Melakukan perhitungan matematika", "Mengubah suara"], answer: 1},
+    {q: "Blok 'when green flag clicked' termasuk dalam kategori...", options: ["Control", "Sensing", "Events", "Motion"], answer: 2},
+    {q: "Untuk menggerakkan Sprite maju beberapa langkah, kita menggunakan blok...", options: ["turn 15 degrees", "move 10 steps", "go to x:0 y:0", "change y by 10"], answer: 1},
+    {q: "Kategori blok yang berwarna biru muda (Motion) berfungsi untuk...", options: ["Mengatur suara", "Mengatur pergerakan sprite", "Mengontrol pengulangan", "Membuat variabel"], answer: 1},
+    {q: "Perintah untuk mengulang suatu instruksi secara terus-menerus tanpa henti adalah...", options: ["repeat 10", "forever", "if then", "wait 1 seconds"], answer: 1},
+    {q: "Latar belakang pada Stage di aplikasi Scratch disebut...", options: ["Costume", "Sound", "Backdrop", "Layout"], answer: 2},
+    {q: "Sumbu yang mengatur posisi Sprite secara mendatar (horizontal) adalah...", options: ["Sumbu Y", "Sumbu X", "Sumbu Z", "Sumbu A"], answer: 1},
+    {q: "Sumbu Y pada Scratch digunakan untuk mengatur posisi Sprite secara...", options: ["Mendatar", "Tegak lurus / Vertikal", "Diagonal", "Melingkar"], answer: 1},
+    {q: "Pusat koordinat (tengah panggung) pada Scratch berada pada titik...", options: ["x: 100, y: 100", "x: -100, y: -100", "x: 0, y: 0", "x: 240, y: 180"], answer: 2},
+    {q: "Untuk merubah penampilan luar/kostum dari suatu Sprite digunakan tab...", options: ["Sounds", "Costumes", "Scripts", "Variables"], answer: 1},
+    {q: "Blok perintah 'say Hello! for 2 seconds' terdapat pada kategori...", options: ["Looks", "Motion", "Sound", "Sensing"], answer: 0},
+    {q: "Kategori blok yang digunakan untuk memeriksa kondisi atau sentuhan objek adalah...", options: ["Control", "Sensing", "Operators", "Variables"], answer: 1},
+    {q: "Blok 'wait 1 seconds' berfungsi untuk...", options: ["Menghentikan program selamanya", "Jeda waktu sebelum mengeksekusi blok berikutnya", "Mempercepat pergerakan sprite", "Mengulang program 1 kali"], answer: 1},
+    {q: "Warna hijau pada kategori blok Scratch menunjukkan grup blok...", options: ["Sensing", "Operators", "Variables", "Control"], answer: 1},
+    {q: "Untuk menyimpan nilai data yang bisa berubah-ubah dalam pemrograman Scratch, kita membuat...", options: ["Costume", "Sprite baru", "Variable", "Backdrop"], answer: 2},
+    {q: "Jika kita ingin Sprite memantul ketika menyentuh pinggir layar, kita menggunakan blok...", options: ["if on edge, bounce", "point towards edge", "glide to edge", "set rotation style"], answer: 0},
+    {q: "Blok 'hide' pada kategori Looks berguna untuk...", options: ["Menampilkan sprite", "Menyembunyikan sprite dari stage", "Menghapus sprite secara permanen", "Mengecilkan ukuran sprite"], answer: 1},
+    {q: "Format ekstensi file proyek yang dihasilkan oleh aplikasi Scratch 3 adalah...", options: [".docx", ".sb3", ".png", ".exe"], answer: 1},
+    {q: "Area tempat kita menyusun rangkaian blok perintah pada Scratch dinamakan...", options: ["Code Area / Script Area", "Stage Area", "Sprite Palette", "Toolbar"], answer: 0},
+    {q: "Perintah 'play sound Meow until done' berada pada kelompok...", options: ["Motion", "Looks", "Sound", "Events"], answer: 2},
+    {q: "Blok 'repeat 10' termasuk ke dalam kategori blok...", options: ["Control", "Events", "Operators", "Sensing"], answer: 0},
+    {q: "Fitur percabangan yang menjalankan perintah jika suatu kondisi terpenuhi menggunakan blok...", options: ["forever", "if ... then", "wait until", "repeat"], answer: 1},
+    {q: "Untuk menambahkan suara baru ke dalam proyek, kita dapat mengakses tab...", options: ["Code", "Costumes", "Sounds", "Extensions"], answer: 2},
+    {q: "Apabila nilai X bernilai positif, maka Sprite akan bergerak ke arah...", options: ["Kiri", "Kanan", "Atas", "Bawah"], answer: 1},
+    {q: "Apabila nilai Y bernilai negatif, maka Sprite akan bergerak ke arah...", options: ["Atas", "Kanan", "Kiri", "Bawah"], answer: 3},
+    {q: "Fungsi dari blok 'pen down' pada ekstensi Pen adalah...", options: ["Menghapus coratan di layar", "Mulai menggambar jejak saat sprite bergerak", "Menaikkan pena dari kertas", "Mengubah warna panggung"], answer: 1},
+    {q: "Operator matematika untuk perkalian pada blok Operators disimbolkan dengan tanda...", options: ["x", ":", "*", "+"], answer: 2},
+    {q: "Guna mengubah ukuran Sprite menjadi lebih besar atau kecil digunakan blok...", options: ["change size by ...", "move steps", "turn degrees", "switch costume"], answer: 0},
+    {q: "Untuk mendeteksi apakah Sprite menyentuh warna tertentu digunakan blok pada kategori...", options: ["Sensing", "Operators", "Looks", "Control"], answer: 0},
+    {q: "Blok 'stop all' berguna untuk...", options: ["Menghentikan salah satu sprite", "Menghentikan seluruh jalannya program", "Menghapus semua program", "Menghentikan lagu saja"], answer: 1},
+    {q: "Bagaimanakah cara menghapus blok perintah yang ada di Script Area?", options: ["Klik kanan lalu Delete Block atau seret kembali ke palette", "Tekan tombol Enter", "Klik 2 kali pada stage", "Matikan komputer"], answer: 0},
+    {q: "Aplikasi Scratch versi online dapat diakses melalui situs...", options: ["scratch.mit.edu", "scratch.com", "scratch.org", "mit.edu/scratch"], answer: 0},
+    {q: "Proses membuat langkah-langkah logika yang terstruktur dalam Scratch dikenal dengan istilah...", options: ["Desain Grafis", "Pemrograman / Coding", "Browsing", "Networking"], answer: 1},
+    {q: "Karakter default (bawaan) saat pertama kali membuka Scratch adalah...", options: ["Anjing", "Kucing (Cat)", "Gajah", "Burung"], answer: 1},
+    {q: "Blok 'clear' atau 'erase all' pada Extension Pen digunakan untuk...", options: ["Menghapus semua gambar/jejak garis pada Stage", "Menghapus Sprite", "Menghapus blok kode", "Menghapus variabel"], answer: 0},
+    {q: "Blok 'pick random 1 to 10' berfungsi untuk...", options: ["Mengambil angka acak antara 1 sampai 10", "Mengurutkan angka 1 sampai 10", "Menjumlahkan angka 1 dan 10", "Mengurangi angka 10 dengan 1"], answer: 0},
+    {q: "Urutan langkah-langkah logis untuk menyusun program di Scratch dinamakan...", options: ["Algoritma", "Variabel", "Array", "Hardware"], answer: 0}
+];
+
+let questions = [];
+let timeRemaining = 3600; // 60 menit
+let timerInterval;
+
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+function initQuiz() {
+    questions = JSON.parse(JSON.stringify(rawQuestions));
+    shuffle(questions);
+
+    const container = document.getElementById('questions-container');
+    container.innerHTML = '';
+
+    questions.forEach((qObj, index) => {
+        let originalOptions = qObj.options.map((opt, idx) => ({ text: opt, isCorrect: idx === qObj.answer }));
+        let shuffledOptions = shuffle(originalOptions);
+
+        let qHTML = `<div class="question-card">
+            <div class="question-title">${index + 1}. ${qObj.q}</div>
+            <div class="options">`;
+
+        shuffledOptions.forEach((opt, optIndex) => {
+            qHTML += `<label>
+                <input type="radio" name="q${index}" value="${opt.isCorrect ? '1' : '0'}">
+                ${String.fromCharCode(65 + optIndex)}. ${opt.text}
+            </label>`;
+        });
+
+        qHTML += `</div></div>`;
+        container.innerHTML += qHTML;
+    });
+
+    startTimer();
+}
+
+function startTimer() {
+    timerInterval = setInterval(() => {
+        timeRemaining--;
+        let minutes = Math.floor(timeRemaining / 60);
+        let seconds = timeRemaining % 60;
+
+        document.getElementById('timer').innerText = 
+            `${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+
+        if (timeRemaining <= 0) {
+            clearInterval(timerInterval);
+            alert('Waktu ujian telah habis!');
+            submitQuiz();
+        }
+    }, 1000);
+}
+
+let finalScore = 0;
+let correctCount = 0;
+let studentName = "";
+let studentClass = "";
+
+function submitQuiz() {
+    studentName = document.getElementById('nama').value.trim();
+    studentClass = document.getElementById('kelas').value.trim();
+
+    if (!studentName || !studentClass) {
+        alert('Mohon isi Nama dan Kelas terlebih dahulu sebelum mengumpulkan!');
+        return;
+    }
+
+    clearInterval(timerInterval);
+
+    correctCount = 0;
+    questions.forEach((_, index) => {
+        const selected = document.querySelector(`input[name="q${index}"]:checked`);
+        if (selected && selected.value === '1') {
+            correctCount++;
+        }
+    });
+
+    finalScore = (correctCount / questions.length) * 100;
+
+    document.getElementById('quiz-screen').style.display = 'none';
+    document.getElementById('result-screen').style.display = 'block';
+
+    document.getElementById('res-nama').innerText = "Nama: " + studentName;
+    document.getElementById('res-kelas').innerText = "Kelas: " + studentClass;
+    document.getElementById('res-score').innerText = finalScore.toFixed(0);
+    document.getElementById('res-detail').innerText = `Benar: ${correctCount} dari ${questions.length} Soal`;
+}
+
+function downloadResult() {
+    const textContent = `====================================
+LAPORAN HASIL UJIAN INTERAKTIF
+Mata Pelajaran : Informatika (Scratch)
+Sekolah        : SMP Negeri 2 Ngadirejo
+Pengampu       : Budi Winarno, S.Kom.
+====================================
+Nama           : ${studentName}
+Kelas/No.Absen : ${studentClass}
+Jumlah Benar   : ${correctCount} / ${questions.length}
+NILAI AKHIR    : ${finalScore.toFixed(0)}
+====================================`;
+
+    const blob = new Blob([textContent], { type: 'text/plain' });
+    const anchor = document.createElement('a');
+    anchor.download = `Nilai_Scratch_${studentName.replace(/\s+/g, '_')}.txt`;
+    anchor.href = window.URL.createObjectURL(blob);
+    anchor.click();
+}
+
+function sendWA() {
+    const textMsg = `Halo Pak Budi Winarno, S.Kom.,%0ASaya telah selesai mengerjakan Ujian Informatika Scratch.%0A%0ANama: *${studentName}*%0AKelas: *${studentClass}*%0ABenar: ${correctCount}/${questions.length}%0ANilai: *${finalScore.toFixed(0)}*`;
+    window.open(`https://api.whatsapp.com/send?text=${textMsg}`, '_blank');
+}
+
+window.onload = initQuiz;
+</script>
+</body>
+</html>
